@@ -7,10 +7,6 @@ struct Set {
     blue: usize,
 }
 
-const RED: usize = 12;
-const GREEN: usize = 13;
-const BLUE: usize = 14;
-
 fn main() {
     let mut sum = 0;
     for line in std::io::stdin().lines() {
@@ -22,7 +18,7 @@ fn main() {
         }
         line.advance(b"Game ".len());
 
-        let id = take_number(&mut line).unwrap();
+        let _id = take_number(&mut line).unwrap();
         line.advance(2);
 
         let mut sets = Vec::new();
@@ -46,7 +42,6 @@ fn main() {
 
             if line.is_empty() {
                 sets.push(set);
-                set = Set::default();
                 break;
             }
             match line.get_u8() {
@@ -62,17 +57,17 @@ fn main() {
             }
         }
 
-        let mut invalid = false;
+        let mut red = 0;
+        let mut green = 0;
+        let mut blue = 0;
         for set in &sets {
-            if set.red > RED || set.green > GREEN || set.blue > BLUE {
-                invalid = true;
-                break;
-            }
+            red = red.max(set.red);
+            green = green.max(set.green);
+            blue = blue.max(set.blue);
         }
+        let power = red * green * blue;
 
-        if !invalid {
-            sum += id;
-        }
+        sum += power;
     }
 
     println!("{sum}");
