@@ -1,4 +1,5 @@
 use std::io::Read;
+use std::collections::{HashMap, HashSet};
 
 fn main() {
     let mut m = Vec::new();
@@ -21,44 +22,45 @@ fn main() {
         s - 1, s, s + 1,
     ];
 
-    let mut sum = 0;
+    let mut numbers_by_star = HashMap::<usize, Vec<usize>>::new();
+    let mut adjacent_stars = HashSet::new();
+    let mut digits = Vec::new();
     for h in 0..height {
-        let mut num = Vec::new();
-        let mut include = false;
         for j in 0..width {
             let i = h * stride + j;
             let c = m[i];
 
             if c.is_ascii_digit() {
-                num.push(c);
+                digits.push(c);
 
-                if !include {
-                    for &offset in adj {
-                        let neighbor = i as isize + offset;
-                        if neighbor < 0 || neighbor >= m.len() as isize {
-                            continue;
-                        }
-
-                        let neighbor = m[neighbor as usize];
-                        if neighbor != b'\n' && neighbor != b'.' && !neighbor.is_ascii_digit() {
-                            eprint!("{}", neighbor as char);
-                            include = true;
-                            break;
-                        }
+                for o in adj {
+                    let i = (i as isize) + o;
+                    if i < 0 || i > m.len() as isize - 1 {
+                        continue;
+                    }
+                    let i = i as usize;
+                    if m[i] == b'*' {
+                        adjacent_stars.insert(i);
                     }
                 }
             }
 
-            if j == width - 1 || !c.is_ascii_digit() {
-                if !num.is_empty() {
-                    eprintln!("{} {}", include, parse_rev_digits(&num));
-                    if include {
-                        sum += parse_rev_digits(&num);
-                    }
-                    include = false;
-                    num.clear();
+            if (!c.is_ascii_digit() || j == width - 1) && !digits.is_empty() {
+                let num = parse_rev_digits(&digits); 
+                for star in &adjacent_stars {
+                    numbers_by_star.entry(*star).or_default().push(num);
                 }
+                digits.clear();
+                adjacent_stars.clear();
             }
+        }
+    }
+
+    let mut sum = 0;
+    for (_star, numbers) in numbers_by_star {
+        eprintln!("{_star}: {numbers:?}");
+        if numbers.len() == 2 {
+            sum += numbers[0] * numbers[1];
         }
     }
 
